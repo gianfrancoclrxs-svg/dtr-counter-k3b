@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>DTR Calculator</title>
+
+  <style>
+    :root {
+      --bg: #f6f6f4;
+      --card: #ffffff;
+      --text: #1a1a1a;
+      --muted: #6b6b6b;
+      --border: #dcdcd6;
+      --accent: #1f6feb;
+      --accent-soft: #e8f0fe;
+      --weekend: #f76707;
+      --weekend-bg: rgba(255, 140, 0, 0.16);
+
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #141414;
+        --card: #1e1e1e;
+        --text: #eeeeee;
+        --muted: #9a9a9a;
+        --border: #333333;
+        --accent: #6ea8ff;
+        --accent-soft: #1c2a44;
+        color-scheme: dark;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #141414;
+      --card: #1e1e1e;
+      --text: #eeeeee;
+      --muted: #9a9a9a;
+      --border: #333333;
+      --accent: #6ea8ff;
+      --accent-soft: #1c2a44;
+      color-scheme: dark;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .wrap {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+    }
+
+    button {
+      padding: 9px 14px;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .card {
+      margin-bottom: 14px;
+      padding: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .top {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    @media (min-width: 560px) {
+      .top {
+        grid-template-columns: 2fr 1fr 2fr;
+      }
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 78px 1fr 1fr 1fr;
+      gap: 6px;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .row:last-child {
+      border-bottom: 0;
+    }
+
+    .row input,
+    .row select {
+      padding: 6px;
+      font-size: 14px;
+    }
+
+    .row.off > *:not(.extra) {
+      opacity: 0.55;
+    }
+
+    .row.weekend {
+      padding-left: 6px;
+      padding-right: 6px;
+      background: var(--weekend-bg);
+      border-radius: 8px;
+    }
+
+    .row.weekend .date,
+    .row.weekend .date small {
+      color: var(--weekend);
+    }
+
+    .date {
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .date small {
+      display: block;
+      font-weight: 400;
+      color: var(--muted);
+    }
+
+    .plus {
+      margin-top: 4px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--accent);
+      font-size: 11px;
+    }
+
+    .extra,
+    .late {
+      display: none;
+      grid-column: 1 / -1;
+      grid-template-columns: 78px 1fr 1fr 1fr;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .extra span,
+    .late span {
+      grid-column: 2;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .results {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .box {
+      padding: 10px;
+      background: var(--accent-soft);
+      border-radius: 10px;
+    }
+
+    .box b {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+
+    .box span {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .box i {
+      display: block;
+      margin-top: 2px;
+      font-size: 12px;
+      font-style: normal;
+      color: var(--muted);
+    }
+
+    .hint {
+      margin: 8px 0 0;
+      font-size: 12px;
+      line-height: 1.4;
+      color: var(--muted);
+    }
+
+    .calc {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .calc h2 {
+      margin: 0 0 8px;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+
+    .line {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 4px 0;
+      font-size: 14px;
+    }
+
+    .line.total {
+      margin-top: 4px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <h1>DTR Calculator</h1>
+
+    <div class="card top">
+      <div>
+        <label for="name">Employee name</label>
+        <input id="name" placeholder="Name">
+      </div>
+      <div>
+        <label for="year">Year</label>
+        <input id="year" type="number">
+      </div>
+      <div>
+        <label for="period">Period</label>
+        <select id="period"></select>
+      </div>
+    </div>
+
+    <div class="card" id="rows"></div>
+
+    <div class="card">
+      <div id="who" style="margin-bottom: 10px; font-weight: 700;"></div>
+      <div class="results" id="results"></div>
+      <div class="calc" id="calc"></div>
+
+      <p class="hint">
+        Office: standard 8:30 to 5:30 with 1 hour lunch. Late and undertime are counted,
+        early in and overtime are not. A late day still counts as present, and a half day
+        counts as 0.5. Minutes late typed on an Office day replace the time in. Diner and Long shift: every 12 hours is 1 day plus 4 hours OT.
+        Absent and Holiday are counted separately. Night diff is 10PM to 6AM. If time out is earlier than time in, it counts as
+        next day.
+      </p>
+
+      <button id="copy" style="margin-top: 10px;">Copy for Excel</button>
+    </div>
+  </div>
+
+  <script>
+    const MONTHS = ["January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"];
+    const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    const OFFICE_IN = 8 * 60 + 30;
+    const OFFICE_OUT = 17 * 60 + 30;
+    const LUNCH = 60;
+    const REGULAR_DAY = 8 * 60;
+    const LONG_BLOCK = 12 * 60;
+    const BLOCK_OT = 4 * 60;
+
+    const NIGHT_WINDOWS = [[0, 360], [1320, 1800], [2760, 3240]];
+
+    const $ = (id) => document.getElementById(id);
+    const today = new Date();
+    const rowData = {};
+    let summaryText = "";
+    let excelRow = "";
+
+    function toMinutes(time) {
+      const [hours, minutes] = time.split(":").map(Number);
+      return hours * 60 + minutes;
+    }
+
+    function nightMinutes(start, end) {
+      let total = 0;
+      for (const [from, to] of NIGHT_WINDOWS) {
+        total += Math.max(0, Math.min(end, to) - Math.max(start, from));
+      }
+      return total;
+    }
+
+    function formatDuration(totalMinutes) {
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = Math.round(totalMinutes % 60);
+
+      if (!hours && !minutes) return "0 hrs";
+
+      const hourText = hours ? `${hours} hr${hours > 1 ? "s" : ""}` : "";
+      const minuteText = minutes ? `${minutes} min${minutes > 1 ? "s" : ""}` : "";
+      return [hourText, minuteText].filter(Boolean).join(" ");
+    }
+
+    const dataKey = (year, month, day) => `${year}-${month}-${day}`;
+
+    function lastCutoff() {
+      let year = today.getFullYear();
+      let month = today.getMonth();
+
+      if (today.getDate() > 15) return { year, month, range: "1-15" };
+
+      month -= 1;
+      if (month < 0) {
+        month = 11;
+        year -= 1;
+      }
+
+      const lastDay = new Date(year, month + 1, 0).getDate();
+      return { year, month, range: `16-${lastDay}` };
+    }
+
+    function buildPeriods() {
+      const year = Number($("year").value);
+      const select = $("period");
+      const previous = select.value;
+
+      select.innerHTML = "";
+
+      for (let month = 0; month < 12; month++) {
+        const lastDay = new Date(year, month + 1, 0).getDate();
+
+        for (const [from, to] of [[1, 15], [16, lastDay]]) {
+          const option = document.createElement("option");
+          option.value = `${month}-${from}-${to}`;
+          option.textContent = `${MONTHS[month]} ${from}\u2013${to}`;
+          select.appendChild(option);
+        }
+      }
+
+      const hasPrevious = [...select.options].some((o) => o.value === previous);
+      const cutoff = lastCutoff();
+
+      select.value = hasPrevious ? previous : `${cutoff.month}-${cutoff.range}`;
+    }
+
+    function buildRows() {
+      const year = Number($("year").value);
+      const [month, firstDay, lastDay] = $("period").value.split("-").map(Number);
+      const container = $("rows");
+
+      container.innerHTML = "";
+
+      for (let day = firstDay; day <= lastDay; day++) {
+        const key = dataKey(year, month, day);
+        const weekday = new Date(year, month, day).getDay();
+        const isWeekend = weekday === 0 || weekday === 6;
+
+        if (!rowData[key]) rowData[key] = { type: "off", timeIn: "", timeOut: "" };
+        const entry = rowData[key];
+
+        const row = document.createElement("div");
+        row.className = "row" + (isWeekend ? " weekend" : "");
+        row.innerHTML = `
+          <div class="date">
+            ${MONTHS[month].slice(0, 3)} ${day}
+            <small>${WEEKDAYS[weekday]}</small>
+            <button class="plus" type="button">+ Diner</button>
+          </div>
+          <select>
+            <option value="off">Off</option>
+            <option value="office">Office</option>
+            <option value="half">Half day</option>
+            <option value="absent">Absent</option>
+            <option value="holiday">Holiday</option>
+            <option value="diner">Diner</option>
+            <option value="long">Long shift</option>
+          </select>
+          <input type="time">
+          <input type="time">
+          <div class="late">
+            <span>Minutes late</span>
+            <input type="number" min="0" placeholder="Late (mins)">
+          </div>
+          <div class="extra">
+            <span>Extra diner shift</span>
+            <input type="time">
+            <input type="time">
+          </div>`;
+
+        const [typeSelect, timeIn, timeOut, lateInput, extraIn, extraOut] =
+          row.querySelectorAll("select, input");
+        const lateBox = row.querySelector(".late");
+        const extraBox = row.querySelector(".extra");
+        const plusButton = row.querySelector(".plus");
+
+        typeSelect.value = entry.type;
+        timeIn.value = entry.timeIn;
+        timeOut.value = entry.timeOut;
+        lateInput.value = entry.lateMin ?? "";
+        extraIn.value = entry.extraIn || "";
+        extraOut.value = entry.extraOut || "";
+
+        const refreshExtra = () => {
+          extraBox.style.display = entry.extra ? "grid" : "none";
+          plusButton.textContent = entry.extra ? "\u2212 Diner" : "+ Diner";
+        };
+
+        const refreshLate = () => {
+          lateBox.style.display = entry.type === "office" ? "grid" : "none";
+        };
+
+        row.classList.toggle("off", entry.type === "off");
+        refreshExtra();
+        refreshLate();
+
+        typeSelect.onchange = () => {
+          entry.type = typeSelect.value;
+          row.classList.toggle("off", entry.type === "off");
+          refreshLate();
+
+          if (entry.type === "office" && !entry.timeIn && !entry.timeOut) {
+            entry.timeIn = "08:30";
+            entry.timeOut = "17:30";
+            timeIn.value = entry.timeIn;
+            timeOut.value = entry.timeOut;
+          }
+          calculate();
+        };
+
+        timeIn.oninput = () => { entry.timeIn = timeIn.value; calculate(); };
+        timeOut.oninput = () => { entry.timeOut = timeOut.value; calculate(); };
+        lateInput.oninput = () => { entry.lateMin = lateInput.value; calculate(); };
+
+        plusButton.onclick = () => {
+          entry.extra = !entry.extra;
+
+          if (entry.extra && !entry.extraIn && !entry.extraOut) {
+            entry.extraIn = "18:00";
+            entry.extraOut = "06:00";
+            extraIn.value = entry.extraIn;
+            extraOut.value = entry.extraOut;
+          }
+          refreshExtra();
+          calculate();
+        };
+
+        extraIn.oninput = () => { entry.extraIn = extraIn.value; calculate(); };
+        extraOut.oninput = () => { entry.extraOut = extraOut.value; calculate(); };
+
+        container.appendChild(row);
+      }
+
+      calculate();
+    }
+
+    function calculate() {
+      const year = Number($("year").value);
+      const [month, firstDay, lastDay] = $("period").value.split("-").map(Number);
+
+      let rendered = 0;
+      let lateCount = 0;
+      let lateMinutes = 0;
+      let undertime = 0;
+      let excessDays = 0;
+      let overtime = 0;
+      let night = 0;
+      let officeDays = 0;
+      let halfDays = 0;
+      let absentDays = 0;
+      let holidays = 0;
+
+      function addLongShift(start, end) {
+        if (end <= start) end += 1440;
+
+        const duration = end - start;
+        const blocks = Math.floor(duration / LONG_BLOCK);
+        const leftover = duration - blocks * LONG_BLOCK;
+
+        let days = blocks;
+        let extra = blocks * BLOCK_OT;
+
+        if (leftover >= REGULAR_DAY) {
+          days += 1;
+          extra += leftover - REGULAR_DAY;
+        } else {
+          extra += leftover;
+        }
+
+        night += nightMinutes(start, end);
+        excessDays += days;
+        overtime += extra;
+        rendered += days * REGULAR_DAY;
+      }
+
+      for (let day = firstDay; day <= lastDay; day++) {
+        const entry = rowData[dataKey(year, month, day)];
+        if (!entry) continue;
+
+        if (entry.extra && entry.extraIn && entry.extraOut) {
+          addLongShift(toMinutes(entry.extraIn), toMinutes(entry.extraOut));
+        }
+
+        if (entry.type === "half") halfDays++;
+        if (entry.type === "absent") absentDays++;
+        if (entry.type === "holiday") holidays++;
+
+        const hasMain = ["office", "diner", "long"].includes(entry.type) && entry.timeIn && entry.timeOut;
+        if (!hasMain) continue;
+
+        const start = toMinutes(entry.timeIn);
+        let end = toMinutes(entry.timeOut);
+
+        if (entry.type === "office") {
+          officeDays++;
+          if (end <= start) end += 1440;
+
+          const typedLate = entry.lateMin ? Number(entry.lateMin) : null;
+          const clockIn = typedLate === null ? start : OFFICE_IN + typedLate;
+
+          const late = Math.max(0, clockIn - OFFICE_IN);
+          const early = Math.max(0, OFFICE_OUT - end);
+
+          if (late > 0) {
+            lateCount++;
+            lateMinutes += late;
+          }
+          undertime += early;
+
+          const inside = Math.max(0, Math.min(end, OFFICE_OUT) - Math.max(clockIn, OFFICE_IN));
+          rendered += inside > LUNCH ? inside - LUNCH : inside;
+          night += nightMinutes(start, end);
+        } else {
+          addLongShift(start, end);
+        }
+      }
+
+      showResults({ rendered, lateCount, lateMinutes, undertime, excessDays, overtime, night, officeDays, halfDays, absentDays, holidays });
+    }
+
+    function showResults(r) {
+      const name = $("name").value.trim() || "Employee";
+      const period = $("period").selectedOptions[0].textContent;
+      const year = $("year").value;
+
+      $("who").textContent = `${name} \u2013 ${period}, ${year}`;
+
+      const presentDays = r.officeDays + r.halfDays * 0.5;
+
+      const items = [
+        ["DAYS PRESENT", `${presentDays} ${presentDays === 1 ? "day" : "days"}`, `${r.officeDays} office + ${r.halfDays} half day`],
+        ["HOURS RENDERED", formatDuration(r.rendered), `${(r.rendered / REGULAR_DAY).toFixed(2)} days`],
+        ["NO. OF LATES", `${r.lateCount} ${r.lateCount === 1 ? "time" : "times"}`, `${formatDuration(r.lateMinutes)} total late`],
+        ["UNDERTIME", formatDuration(r.undertime), ""],
+        ["EXCESS DAYS", `${r.excessDays} ${r.excessDays === 1 ? "day" : "days"}`, "from long shifts"],
+        ["ABSENT", `${r.absentDays} ${r.absentDays === 1 ? "day" : "days"}`, ""],
+        ["HOLIDAYS", `${r.holidays} ${r.holidays === 1 ? "day" : "days"}`, ""],
+        ["OT", formatDuration(r.overtime), ""],
+        ["NIGHT DIFF", formatDuration(r.night), ""]
+      ];
+
+      $("results").innerHTML = items.map(([title, value, note]) => `
+        <div class="box">
+          <b>${title}</b>
+          <span>${value}</span>
+          ${note ? `<i>${note}</i>` : ""}
+        </div>`).join("");
+
+      const totalDays = presentDays + r.excessDays;
+
+      const lines = [
+        ["Office days present (late still counts)", `${r.officeDays} × 1 = ${r.officeDays}`],
+        ["Half days", `${r.halfDays} × 0.5 = ${r.halfDays * 0.5}`],
+        ["Days present", `${r.officeDays} + ${r.halfDays * 0.5} = ${presentDays}`],
+        ["Excess days (diner / long shift)", `${r.excessDays}`],
+        ["Absent", `${r.absentDays}`],
+        ["Holidays", `${r.holidays}`],
+        ["Late", `${r.lateCount} ${r.lateCount === 1 ? "time" : "times"}, ${formatDuration(r.lateMinutes)}`],
+        ["Undertime", formatDuration(r.undertime)],
+        ["OT", formatDuration(r.overtime)],
+        ["Night diff", formatDuration(r.night)]
+      ];
+
+      $("calc").innerHTML = `
+        <h2>COMPUTATION</h2>
+        ${lines.map(([label, value]) => `<div class="line"><span>${label}</span><span>${value}</span></div>`).join("")}
+        <div class="line total"><span>Total days (present + excess)</span><span>${presentDays} + ${r.excessDays} = ${totalDays}</span></div>`;
+
+      excelRow = [
+        name,
+        r.absentDays,
+        presentDays,
+        r.excessDays,
+        formatDuration(r.lateMinutes),
+        formatDuration(r.overtime),
+        formatDuration(r.night)
+      ].join("\t");
+
+      summaryText = `${name} | ${period} ${year}\n` +
+        items.map(([title, value, note]) => `${title}: ${value}${note ? ` (${note})` : ""}`).join("\n");
+    }
+
+    $("year").value = lastCutoff().year;
+
+    $("name").oninput = calculate;
+    $("period").onchange = buildRows;
+    $("year").onchange = () => { buildPeriods(); buildRows(); };
+
+    $("copy").onclick = () => {
+      try {
+        navigator.clipboard.writeText(excelRow);
+        $("copy").textContent = "Copied";
+        setTimeout(() => { $("copy").textContent = "Copy for Excel"; }, 1200);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    buildPeriods();
+    buildRows();
+  </script>
+</body>
+
+</html>
